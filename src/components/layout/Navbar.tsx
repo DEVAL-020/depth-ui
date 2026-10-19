@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Search, Menu, X, ArrowRight, Star } from "lucide-react";
 
 export interface NavbarProps {
@@ -34,8 +34,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     return 3; // Initial verified star count
   });
 
-  useEffect(() => {
-    fetch("https://api.github.com/repos/DEVAL-020/depth-ui")
+  // Fast synchronization with GitHub repository stargazers
+  const fetchLatestStars = useCallback(() => {
+    // Append timestamp query parameter and use cache: "no-store" to bypass browser & CDN caching
+    const endpoint = `https://api.github.com/repos/DEVAL-020/depth-ui?_t=${Date.now()}`;
+    fetch(endpoint, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+      },
+    })
       .then((res) => {
         if (res.ok) return res.json();
         throw new Error("Failed to fetch repository stats");
@@ -54,9 +62,39 @@ export const Navbar: React.FC<NavbarProps> = ({
         }
       })
       .catch(() => {
-        // Fallback to initial/cached value
+        // Fallback to current state
       });
   }, []);
+
+  useEffect(() => {
+    // 1. Initial fast check
+    fetchLatestStars();
+
+    // 2. Query immediately when window is refocused or becomes visible (e.g. user stars on GitHub and tabs back)
+    const handleRecheck = () => {
+      fetchLatestStars();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchLatestStars();
+      }
+    };
+
+    window.addEventListener("focus", handleRecheck);
+    window.addEventListener("pageshow", handleRecheck);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    // 3. Fast background polling every 15 seconds while user is on the site
+    const interval = setInterval(fetchLatestStars, 15000);
+
+    return () => {
+      window.removeEventListener("focus", handleRecheck);
+      window.removeEventListener("pageshow", handleRecheck);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      clearInterval(interval);
+    };
+  }, [fetchLatestStars]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -208,6 +246,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             href="https://github.com/DEVAL-020/depth-ui"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              // Rapid re-query when user returns after starring
+              setTimeout(fetchLatestStars, 1200);
+              setTimeout(fetchLatestStars, 3000);
+            }}
             aria-label={`Depth UI on GitHub (${repoStars} stars)`}
             className="hidden md:flex items-center gap-2 px-3 py-1.5 min-h-[40px] rounded-lg text-xs sm:text-sm font-medium text-zinc-200 hover:text-white hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all group"
             title="Star DEVAL-020/depth-ui on GitHub"
@@ -277,6 +320,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="https://github.com/DEVAL-020/depth-ui"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                setTimeout(fetchLatestStars, 1200);
+                setTimeout(fetchLatestStars, 3000);
+              }}
               aria-label={`Depth UI GitHub Repository (${repoStars} stars)`}
               className="w-full py-2.5 px-3.5 rounded-xl bg-[#18181b] border border-zinc-800 text-zinc-200 font-medium hover:bg-zinc-800 transition-colors flex items-center justify-between text-sm"
             >
