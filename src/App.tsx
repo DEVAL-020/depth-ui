@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from "react";
 import {
   Layers,
   Activity,
@@ -44,13 +44,15 @@ const getInitialAppState = () => {
       category: "all",
       search: "",
       isDark: true,
+      componentId: null as string | null,
     };
   }
 
   const searchParams = new URLSearchParams(window.location.search);
   const hash = window.location.hash.toLowerCase();
+  const rawHash = window.location.hash.replace(/^#/, "");
 
-  // 1. Current Tab
+  // 1. Current Tab: Authoritative from URL query or path/hash
   let tab: "components" | "showcase" | "docs" = "components";
   const paramTab = searchParams.get("tab")?.toLowerCase();
   if (paramTab === "docs" || paramTab === "showcase" || paramTab === "components") {
@@ -59,15 +61,6 @@ const getInitialAppState = () => {
     tab = "docs";
   } else if (hash === "#showcase" || window.location.pathname === "/showcase") {
     tab = "showcase";
-  } else {
-    try {
-      const savedTab = sessionStorage.getItem("depth_ui_tab");
-      if (savedTab === "docs" || savedTab === "showcase" || savedTab === "components") {
-        tab = savedTab;
-      }
-    } catch {
-      // Storage unavailable
-    }
   }
 
   // 2. View Mode ('grid' vs 'previews')
@@ -75,31 +68,15 @@ const getInitialAppState = () => {
   const paramView = searchParams.get("view")?.toLowerCase();
   if (paramView === "previews" || paramView === "grid") {
     viewMode = paramView;
-  } else {
-    let hasSavedView = false;
-    try {
-      const savedView = sessionStorage.getItem("depth_ui_view_mode");
-      if (savedView === "previews" || savedView === "grid") {
-        viewMode = savedView;
-        hasSavedView = true;
-      }
-    } catch {
-      // Storage unavailable
-    }
-
-    if (!hasSavedView) {
-      const rawHash = window.location.hash.replace(/^#/, "");
-      if (
-        rawHash &&
-        rawHash !== "docs" &&
-        rawHash !== "showcase" &&
-        rawHash !== "components" &&
-        rawHash !== "components-catalog" &&
-        !["intro", "installation", "utils", "nextjs", "theming"].includes(rawHash)
-      ) {
-        viewMode = "previews";
-      }
-    }
+  } else if (
+    rawHash &&
+    rawHash !== "docs" &&
+    rawHash !== "showcase" &&
+    rawHash !== "components" &&
+    rawHash !== "components-catalog" &&
+    !["intro", "installation", "utils", "nextjs", "theming"].includes(rawHash)
+  ) {
+    viewMode = "previews";
   }
 
   // 3. Category
@@ -107,15 +84,6 @@ const getInitialAppState = () => {
   const paramCat = searchParams.get("category")?.toLowerCase();
   if (paramCat && VALID_CATEGORIES.includes(paramCat)) {
     category = paramCat;
-  } else {
-    try {
-      const savedCat = sessionStorage.getItem("depth_ui_category");
-      if (savedCat && VALID_CATEGORIES.includes(savedCat)) {
-        category = savedCat;
-      }
-    } catch {
-      // Storage unavailable
-    }
   }
 
   // 4. Search Query
@@ -123,15 +91,19 @@ const getInitialAppState = () => {
   const paramQuery = searchParams.get("q") || searchParams.get("search");
   if (typeof paramQuery === "string") {
     search = paramQuery;
-  } else {
-    try {
-      search = sessionStorage.getItem("depth_ui_search") || "";
-    } catch {
-      // Storage unavailable
-    }
   }
 
-  // 5. Theme
+  // 5. Component ID (if previewing specific card)
+  let componentId: string | null = null;
+  if (
+    viewMode === "previews" &&
+    rawHash &&
+    !["docs", "showcase", "components", "components-catalog", "intro", "installation", "utils", "nextjs", "theming"].includes(rawHash)
+  ) {
+    componentId = rawHash;
+  }
+
+  // 6. Theme
   let isDark = true;
   try {
     const savedTheme = localStorage.getItem("depth_ui_theme");
@@ -141,7 +113,60 @@ const getInitialAppState = () => {
     // Storage unavailable
   }
 
-  return { tab, viewMode, category, search, isDark };
+  return { tab, viewMode, category, search, isDark, componentId };
+};
+
+// URL Builder ensuring clean, canonical URLs for each page state
+const buildUrl = (
+  tab: "components" | "showcase" | "docs",
+  viewMode: "grid" | "previews",
+  category: string,
+  search: string,
+  hashOverride?: string | null,
+): string => {
+  const params = new URLSearchParams();
+  if (tab !== "components") {
+    params.set("tab", tab);
+  } else {
+    if (viewMode !== "grid") {
+      params.set("view", viewMode);
+    }
+    if (category && category !== "all") {
+      params.set("category", category);
+    }
+    if (search && search.trim()) {
+      params.set("q", search.trim());
+    }
+  }
+
+  const queryStr = params.toString();
+  const queryPrefix = queryStr ? `?${queryStr}` : "";
+
+  let hash = hashOverride !== undefined ? hashOverride || "" : window.location.hash;
+  const rawHash = hash.replace(/^#/, "");
+  const isValidDocsSection = [
+    "intro",
+    "installation",
+    "utils",
+    "nextjs",
+    "theming",
+  ].includes(rawHash);
+
+  if (tab === "docs") {
+    if (!isValidDocsSection) {
+      hash = "";
+    }
+  } else if (tab === "showcase") {
+    hash = "";
+  } else if (tab === "components") {
+    if (viewMode === "grid") {
+      if (hash !== "#components-catalog") {
+        hash = "";
+      }
+    }
+  }
+
+  return `${window.location.pathname}${queryPrefix}${hash}`;
 };
 
 export function App() {
@@ -152,13 +177,29 @@ export function App() {
   const [viewMode, setViewMode] = useState<"grid" | "previews">(
     initial.viewMode,
   );
-  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(
+    initial.componentId,
+  );
   const [activeCategory, setActiveCategory] = useState<string>(
     initial.category,
   );
   const [searchQuery, setSearchQuery] = useState(initial.search);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDark, setIsDark] = useState(initial.isDark);
+
+  // History state navigation tracking refs across all devices
+  const isPopstateNav = useRef(false);
+  const isInitialMount = useRef(true);
+  const prevNavState = useRef({
+    tab: initial.tab,
+    viewMode: initial.viewMode,
+    category: initial.category,
+    search: initial.search,
+  });
+  const isSearchOpenRef = useRef(isSearchOpen);
+  useEffect(() => {
+    isSearchOpenRef.current = isSearchOpen;
+  }, [isSearchOpen]);
 
   // Sync theme with html root class and localStorage
   useEffect(() => {
@@ -181,63 +222,200 @@ export function App() {
     }
   }, [isDark]);
 
-  // Persist working state across reloads via URL query params & sessionStorage
+  // Handle native device and browser back/forward buttons (Android gestures, iOS swipe, laptop back/forward buttons)
   useEffect(() => {
-    try {
-      sessionStorage.setItem("depth_ui_tab", currentTab);
-      sessionStorage.setItem("depth_ui_view_mode", viewMode);
-      sessionStorage.setItem("depth_ui_category", activeCategory);
-      sessionStorage.setItem("depth_ui_search", searchQuery);
-    } catch {
-      // Storage unavailable
+    const handlePopState = (event: PopStateEvent) => {
+      // 1. If Search Modal is open, mobile/desktop back button should dismiss it first
+      if (isSearchOpenRef.current) {
+        setIsSearchOpen(false);
+        return;
+      }
+
+      // Mark that this state transition was triggered by the browser/device back or forward button
+      isPopstateNav.current = true;
+
+      // 2. Read target state from event.state or parse directly from popped URL
+      let targetTab: "components" | "showcase" | "docs" = "components";
+      let targetViewMode: "grid" | "previews" = "grid";
+      let targetCategory = "all";
+      let targetSearch = "";
+      let targetScrollY: number | undefined;
+      let targetComponentId: string | null = null;
+
+      if (event.state && typeof event.state.tab === "string") {
+        targetTab = event.state.tab;
+        targetViewMode = event.state.viewMode || "grid";
+        targetCategory = event.state.category || "all";
+        targetSearch = event.state.search || "";
+        targetScrollY = event.state.scrollY;
+        targetComponentId = event.state.componentId || null;
+      } else {
+        const parsed = getInitialAppState();
+        targetTab = parsed.tab;
+        targetViewMode = parsed.viewMode;
+        targetCategory = parsed.category;
+        targetSearch = parsed.search;
+        targetComponentId = parsed.componentId;
+      }
+
+      // 3. Update React states to reflect the exact previous page of the website
+      setCurrentTab(targetTab);
+      setViewMode(targetViewMode);
+      setActiveCategory(targetCategory);
+      setSearchQuery(targetSearch);
+      setHighlightedId(targetComponentId);
+
+      // 4. Update nav tracking ref so future forward/back knows the current position
+      prevNavState.current = {
+        tab: targetTab,
+        viewMode: targetViewMode,
+        category: targetCategory,
+        search: targetSearch,
+      };
+
+      // 5. Restore scroll or target component preview smoothly
+      if (targetComponentId && targetViewMode === "previews") {
+        setTimeout(() => {
+          const el = document.getElementById(targetComponentId!);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      } else if (typeof targetScrollY === "number" && targetScrollY >= 0) {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: targetScrollY!, behavior: "instant" });
+        });
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  // Synchronize browser history and URL with React state across all devices
+  useEffect(() => {
+    // If this state update was triggered by popstate (device back/forward), DO NOT push a new history entry!
+    if (isPopstateNav.current) {
+      isPopstateNav.current = false;
+      return;
     }
 
-    const params = new URLSearchParams();
-    if (currentTab !== "components") {
-      params.set("tab", currentTab);
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const targetUrl = buildUrl(
+      currentTab,
+      viewMode,
+      activeCategory,
+      searchQuery,
+      highlightedId ? `#${highlightedId}` : undefined,
+    );
+
+    // Initial Mount: Replace current history slot with normalized state and URL
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      window.history.replaceState(
+        {
+          tab: currentTab,
+          viewMode,
+          category: activeCategory,
+          search: searchQuery,
+          componentId: highlightedId,
+          scrollY: window.scrollY,
+        },
+        "",
+        targetUrl !== currentUrl ? targetUrl : currentUrl,
+      );
+      prevNavState.current = {
+        tab: currentTab,
+        viewMode,
+        category: activeCategory,
+        search: searchQuery,
+      };
+      return;
+    }
+
+    // Check if this is a PAGE NAVIGATION:
+    // Tab changed (Components <-> Docs <-> Showcase) OR ViewMode changed (Grid <-> Previews)
+    const isTabChange = currentTab !== prevNavState.current.tab;
+    const isViewChange = viewMode !== prevNavState.current.viewMode;
+    const isPageNavigation = isTabChange || isViewChange;
+
+    if (isPageNavigation) {
+      // 1. If currently inside a modal history state, replace it instead of pushing
+      if (window.history.state?.isSearchModal) {
+        window.history.replaceState(
+          {
+            tab: currentTab,
+            viewMode,
+            category: activeCategory,
+            search: searchQuery,
+            componentId: highlightedId,
+            scrollY: 0,
+          },
+          "",
+          targetUrl,
+        );
+      } else {
+        // Save scroll position of the page we are leaving into its existing history slot
+        try {
+          const currentState = window.history.state || {};
+          window.history.replaceState(
+            {
+              ...currentState,
+              scrollY: window.scrollY,
+            },
+            "",
+          );
+        } catch {
+          // Storage/state error safety
+        }
+
+        // PUSH a new entry onto the device/browser history stack!
+        window.history.pushState(
+          {
+            tab: currentTab,
+            viewMode,
+            category: activeCategory,
+            search: searchQuery,
+            componentId: highlightedId,
+            scrollY: 0,
+          },
+          "",
+          targetUrl,
+        );
+      }
+
+      prevNavState.current = {
+        tab: currentTab,
+        viewMode,
+        category: activeCategory,
+        search: searchQuery,
+      };
     } else {
-      if (viewMode !== "grid") {
-        params.set("view", viewMode);
-      }
-      if (activeCategory !== "all") {
-        params.set("category", activeCategory);
-      }
-      if (searchQuery.trim()) {
-        params.set("q", searchQuery.trim());
-      }
-    }
+      // Intra-page changes (search query typing, category chips):
+      // Update in place so typing keystrokes don't spam browser history
+      window.history.replaceState(
+        {
+          tab: currentTab,
+          viewMode,
+          category: activeCategory,
+          search: searchQuery,
+          componentId: highlightedId,
+          scrollY: window.scrollY,
+        },
+        "",
+        targetUrl,
+      );
 
-    const queryStr = params.toString();
-    const queryPrefix = queryStr ? `?${queryStr}` : "";
-    let hash = window.location.hash;
-    const rawHash = hash.replace(/^#/, "");
-    const isValidDocsSection = [
-      "intro",
-      "installation",
-      "utils",
-      "nextjs",
-      "theming",
-    ].includes(rawHash);
-
-    // Keep URL clean and never inject fake anchor hashes
-    if (currentTab === "docs") {
-      if (!isValidDocsSection) {
-        hash = "";
-      }
-    } else if (currentTab === "showcase") {
-      hash = "";
-    } else if (currentTab === "components") {
-      if (viewMode === "grid" && hash !== "#components-catalog") {
-        hash = "";
-      }
+      prevNavState.current = {
+        tab: currentTab,
+        viewMode,
+        category: activeCategory,
+        search: searchQuery,
+      };
     }
-
-    const targetUrl = `${window.location.pathname}${queryPrefix}${hash}`;
-    const currentFullUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (targetUrl !== currentFullUrl) {
-      window.history.replaceState(null, "", targetUrl);
-    }
-  }, [currentTab, viewMode, activeCategory, searchQuery]);
+  }, [currentTab, viewMode, activeCategory, searchQuery, highlightedId]);
 
   // Sync browser title, meta description with current view
   useEffect(() => {
@@ -267,24 +445,6 @@ export function App() {
       );
     }
   }, [currentTab]);
-
-  // Handle browser back/forward buttons and hash navigation
-  useEffect(() => {
-    const handleSyncFromUrl = () => {
-      const state = getInitialAppState();
-      setCurrentTab(state.tab);
-      setViewMode(state.viewMode);
-      setActiveCategory(state.category);
-      setSearchQuery(state.search);
-    };
-
-    window.addEventListener("popstate", handleSyncFromUrl);
-    window.addEventListener("hashchange", handleSyncFromUrl);
-    return () => {
-      window.removeEventListener("popstate", handleSyncFromUrl);
-      window.removeEventListener("hashchange", handleSyncFromUrl);
-    };
-  }, []);
 
 
 
@@ -481,23 +641,54 @@ export function App() {
     });
   }, [activeCategory, searchQuery]);
 
-  const handleSelectComponentFromSearch = (id: string) => {
-    setCurrentTab("components");
-    setViewMode("previews");
-    setHighlightedId(id);
+  const handleOpenSearch = useCallback(() => {
     try {
-      sessionStorage.setItem("depth_ui_view_mode", "previews");
+      window.history.pushState(
+        {
+          tab: currentTab,
+          viewMode,
+          category: activeCategory,
+          search: searchQuery,
+          componentId: highlightedId,
+          isSearchModal: true,
+          scrollY: window.scrollY,
+        },
+        "",
+      );
     } catch {
-      // Storage unavailable
+      // Ignore
     }
-    const params = new URLSearchParams(window.location.search);
-    params.set("view", "previews");
-    const queryStr = params.toString() ? `?${params.toString()}` : "";
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${queryStr}#${id}`,
-    );
+    setIsSearchOpen(true);
+  }, [currentTab, viewMode, activeCategory, searchQuery, highlightedId]);
+
+  const handleCloseSearch = useCallback(() => {
+    setIsSearchOpen(false);
+    if (window.history.state?.isSearchModal) {
+      window.history.back();
+    }
+  }, []);
+
+  // Keyboard shortcut for Cmd/Ctrl+K search modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (isSearchOpenRef.current) {
+          handleCloseSearch();
+        } else {
+          handleOpenSearch();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleOpenSearch, handleCloseSearch]);
+
+  const handleSelectComponentFromSearch = (id: string) => {
+    setIsSearchOpen(false);
+    setCurrentTab("components");
+    setHighlightedId(id);
+    setViewMode("previews");
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
@@ -510,21 +701,8 @@ export function App() {
   };
 
   const handleSelectComponentFromGrid = (id: string) => {
-    setViewMode("previews");
     setHighlightedId(id);
-    try {
-      sessionStorage.setItem("depth_ui_view_mode", "previews");
-    } catch {
-      // Storage unavailable
-    }
-    const params = new URLSearchParams(window.location.search);
-    params.set("view", "previews");
-    const queryStr = params.toString() ? `?${params.toString()}` : "";
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${queryStr}#${id}`,
-    );
+    setViewMode("previews");
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
@@ -537,22 +715,8 @@ export function App() {
   };
 
   const handleSwitchToGrid = (scrollTarget: "catalog" | "top" = "catalog") => {
+    setHighlightedId(null);
     setViewMode("grid");
-    try {
-      sessionStorage.setItem("depth_ui_view_mode", "grid");
-    } catch {
-      // Storage unavailable
-    }
-    // Cleanly remove view=previews and any component anchor hash so reload stays in grid!
-    const params = new URLSearchParams(window.location.search);
-    params.delete("view");
-    const queryStr = params.toString() ? `?${params.toString()}` : "";
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${queryStr}`,
-    );
-
     setTimeout(() => {
       if (scrollTarget === "top") {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -621,7 +785,7 @@ export function App() {
       <Navbar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
-        onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenSearch={handleOpenSearch}
         isDark={isDark}
         setIsDark={setIsDark}
         onNavigateToHome={() => {
@@ -935,7 +1099,7 @@ export function App() {
       {/* Global Search Modal */}
       <SearchModal
         isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
+        onClose={handleCloseSearch}
         onSelectComponent={handleSelectComponentFromSearch}
       />
     </div>
