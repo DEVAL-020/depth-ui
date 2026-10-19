@@ -160,6 +160,60 @@
         ]
       }
     </script>
+
+    <!-- Suppress and remove Netlify HUD badge iframe if injected -->
+    <style>
+      #nl-badge-frame,
+      #nl-hud-frame,
+      iframe[id*="nl-"],
+      iframe[title="Powered by Netlify"],
+      iframe[title="Netlify"] {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        clip: rect(0, 0, 0, 0) !important;
+        clip-path: inset(50%) !important;
+        position: absolute !important;
+        z-index: -99999 !important;
+      }
+    </style>
+    <script>
+      (function () {
+        try {
+          var observer = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+              var added = mutations[i].addedNodes;
+              for (var j = 0; j < added.length; j++) {
+                var node = added[j];
+                if (node && node.nodeType === 1) {
+                  if (
+                    node.id === "nl-badge-frame" ||
+                    node.id === "nl-hud-frame" ||
+                    (node.tagName === "IFRAME" &&
+                      (node.title === "Powered by Netlify" ||
+                        node.title === "Netlify")) ||
+                    (node.tagName === "SCRIPT" &&
+                      node.src &&
+                      node.src.indexOf("/.netlify/scripts/hud") !== -1)
+                  ) {
+                    node.remove();
+                  }
+                }
+              }
+            }
+          });
+          observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+          });
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
   </head>
 
   <body
