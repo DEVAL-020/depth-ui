@@ -98,28 +98,46 @@ export const HeroShowcaseGrid: React.FC = () => {
       <div className="rounded-2xl bg-[#121215] border border-zinc-800/80 p-5 sm:p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-zinc-700/80 transition-colors">
         {/* Row 1: Button Variants */}
         <div className="flex flex-wrap items-center gap-2">
-          <button className="px-3.5 py-1.5 rounded-full bg-white text-black text-xs sm:text-sm font-semibold hover:bg-zinc-200 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95">
+          <button
+            type="button"
+            aria-label="Demo Primary Button"
+            className="px-3.5 py-2 rounded-full bg-white text-black text-xs sm:text-sm font-semibold hover:bg-zinc-200 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 min-h-[36px]"
+          >
             <span>Button</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
-          <button className="px-3.5 py-1.5 rounded-full bg-zinc-900 text-zinc-300 text-xs sm:text-sm font-medium hover:bg-zinc-800 hover:text-white transition-colors border border-zinc-800 cursor-pointer active:scale-95">
+          <button
+            type="button"
+            aria-label="Demo Secondary Button"
+            className="px-3.5 py-2 rounded-full bg-zinc-900 text-zinc-300 text-xs sm:text-sm font-medium hover:bg-zinc-800 hover:text-white transition-colors border border-zinc-800 cursor-pointer active:scale-95 min-h-[36px]"
+          >
             Secondary
           </button>
-          <button className="px-3 py-1.5 rounded-full bg-transparent text-zinc-400 text-xs sm:text-sm font-medium hover:text-white transition-colors border border-zinc-800 hover:border-zinc-700 cursor-pointer active:scale-95">
+          <button
+            type="button"
+            aria-label="Demo Outline Button"
+            className="px-3.5 py-2 rounded-full bg-transparent text-zinc-300 text-xs sm:text-sm font-medium hover:text-white transition-colors border border-zinc-800 hover:border-zinc-700 cursor-pointer active:scale-95 min-h-[36px]"
+          >
             Outline
           </button>
         </div>
 
         {/* Row 2: Search Component Filter */}
         <div className="relative">
+          <label htmlFor="hero-showcase-search" className="sr-only">
+            Search 100+ components
+          </label>
           <input
+            id="hero-showcase-search"
+            name="hero-showcase-search"
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search 100+ components..."
-            className="w-full bg-[#18181b] border border-zinc-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors"
+            aria-label="Search 100+ components"
+            className="w-full bg-[#18181b] border border-zinc-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-200 placeholder-zinc-400 focus:outline-none focus:border-zinc-600 transition-colors min-h-[40px]"
           />
-          <Search className="w-4 h-4 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* Row 3: Quick Import Snippet */}
@@ -133,7 +151,17 @@ export const HeroShowcaseGrid: React.FC = () => {
             &#125; <span className="text-violet-400">from</span>{" "}
             <span className="text-cyan-400">'depth-ui'</span>
           </code>
-          <button className="text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0 ml-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopyCode();
+            }}
+            aria-label={
+              codeCopied ? "Code snippet copied" : "Copy import code snippet"
+            }
+            className="text-zinc-400 group-hover:text-zinc-200 transition-colors shrink-0 ml-2 p-1 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+          >
             {codeCopied ? (
               <Check className="w-3.5 h-3.5 text-emerald-400 animate-in zoom-in" />
             ) : (
@@ -154,18 +182,24 @@ export const HeroShowcaseGrid: React.FC = () => {
             </span>
           </div>
 
-          {/* Radio & Tactile Switch */}
-          <div className="flex items-center gap-2.5">
+          {/* Radio & Tactile Switch with accessible names and comfortable touch target sizes */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
             <button
+              type="button"
+              role="radio"
+              aria-checked={radioSelected === "one"}
+              aria-label="Select first option"
               onClick={() =>
                 setRadioSelected(radioSelected === "one" ? "two" : "one")
               }
-              className="w-4 h-4 rounded-full border border-zinc-500 flex items-center justify-center cursor-pointer hover:border-zinc-400 transition-colors"
+              className="min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer rounded-lg hover:bg-zinc-800/40 transition-colors"
               title="Toggle radio selection"
             >
-              {radioSelected === "one" && (
-                <span className="w-2 h-2 rounded-full bg-white shadow-xs" />
-              )}
+              <span className="w-4 h-4 rounded-full border border-zinc-400 flex items-center justify-center hover:border-zinc-200 transition-colors">
+                {radioSelected === "one" && (
+                  <span className="w-2 h-2 rounded-full bg-white shadow-xs" />
+                )}
+              </span>
             </button>
 
             {/* Tactile Switch Toggle */}
@@ -173,21 +207,26 @@ export const HeroShowcaseGrid: React.FC = () => {
               type="button"
               role="switch"
               aria-checked={toggleActive}
+              aria-label="Toggle interactive preview switch"
               onClick={() => setToggleActive(!toggleActive)}
-              className={`w-9 h-5 rounded-full transition-all duration-200 relative cursor-pointer p-0.5 border ${
-                toggleActive
-                  ? "bg-emerald-500 border-emerald-400/80 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                  : "bg-zinc-800 border-zinc-700 hover:border-zinc-600"
-              }`}
+              className="min-w-[44px] min-h-[40px] flex items-center justify-center cursor-pointer rounded-lg hover:bg-zinc-800/40 transition-colors p-1"
               title="Click to toggle ON/OFF"
             >
               <span
-                className={`w-3.5 h-3.5 rounded-full block transform transition-transform duration-200 ease-out ${
+                className={`w-9 h-5 rounded-full transition-all duration-200 relative p-0.5 border inline-block ${
                   toggleActive
-                    ? "translate-x-4 bg-white shadow-sm"
-                    : "translate-x-0 bg-zinc-400"
+                    ? "bg-emerald-500 border-emerald-400/80 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                    : "bg-zinc-800 border-zinc-700 hover:border-zinc-600"
                 }`}
-              />
+              >
+                <span
+                  className={`w-3.5 h-3.5 rounded-full block transform transition-transform duration-200 ease-out ${
+                    toggleActive
+                      ? "translate-x-4 bg-white shadow-sm"
+                      : "translate-x-0 bg-zinc-400"
+                  }`}
+                />
+              </span>
             </button>
           </div>
         </div>
@@ -195,16 +234,21 @@ export const HeroShowcaseGrid: React.FC = () => {
         {/* Row 5: Alert Dialog & Action Dropdown */}
         <div className="flex items-center justify-between pt-2 border-t border-zinc-800/60">
           <button
+            type="button"
+            aria-label="Trigger Alert Dialog preview"
             onClick={() => setShowAlertDialog(true)}
-            className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs sm:text-sm font-medium border border-zinc-800 transition-colors cursor-pointer"
+            className="px-3.5 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs sm:text-sm font-medium border border-zinc-800 transition-colors cursor-pointer min-h-[36px]"
           >
             Alert Dialog
           </button>
 
           <div className="relative">
             <button
+              type="button"
+              aria-label="Toggle quick actions menu"
+              aria-expanded={buttonGroupOpen}
               onClick={() => setButtonGroupOpen(!buttonGroupOpen)}
-              className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs sm:text-sm font-medium border border-zinc-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs sm:text-sm font-medium border border-zinc-800 flex items-center gap-1.5 transition-colors cursor-pointer min-h-[36px]"
             >
               <span>Quick Actions</span>
               {buttonGroupOpen ? (
@@ -302,21 +346,22 @@ export const HeroShowcaseGrid: React.FC = () => {
                   onMouseLeave={() => setHoveredBar(null)}
                   className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
                 >
-                  {/* Tooltip */}
+                  {/* Tooltip with fixed dimensions to prevent layout jitter */}
                   <div
-                    className={`text-xs font-semibold text-zinc-100 transition-opacity ${
+                    className={`h-4 text-xs font-semibold text-zinc-100 transition-opacity flex items-center justify-center ${
                       isHovered ? "opacity-100 scale-105" : "opacity-0"
                     }`}
                   >
                     {bar.count}
                   </div>
 
-                  {/* Vertical Bar with Vibrant Gradient */}
+                  {/* Vertical Bar with Vibrant Gradient (scaleY GPU animation eliminates CLS) */}
                   <div className="w-full bg-zinc-900/90 rounded-lg overflow-hidden h-24 flex items-end p-0.5 border border-zinc-800/60">
                     <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${bar.value}%` }}
-                      transition={{ duration: 0.5, delay: i * 0.05 }}
+                      initial={{ scaleY: 0 }}
+                      animate={{ scaleY: 1 }}
+                      transition={{ duration: 0.45, delay: i * 0.05, ease: "easeOut" }}
+                      style={{ height: `${bar.value}%`, transformOrigin: "bottom" }}
                       className={`w-full rounded-md bg-gradient-to-t ${bar.gradient} transition-all duration-300 ${
                         isHovered
                           ? "opacity-100 brightness-125 shadow-lg shadow-violet-500/25"
@@ -370,7 +415,7 @@ export const HeroShowcaseGrid: React.FC = () => {
             </h3>
             <Palette className="w-4 h-4 text-violet-400" />
           </div>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-0.5 leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-300 mt-0.5 leading-relaxed">
             Customize typography, borders, and color accents.
           </p>
         </div>
@@ -378,51 +423,75 @@ export const HeroShowcaseGrid: React.FC = () => {
         <div className="space-y-3">
           {/* Theme Preset */}
           <div>
-            <label className="text-xs font-medium text-zinc-300 block mb-1">
+            <label
+              htmlFor="theme-token-preset"
+              className="text-xs font-medium text-zinc-300 block mb-1"
+            >
               Color Token Theme
             </label>
             <input
+              id="theme-token-preset"
+              name="theme-token-preset"
               type="text"
               value={themePreset}
               onChange={(e) => setThemePreset(e.target.value)}
-              className="w-full bg-[#18181b] border border-zinc-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-200 focus:outline-none focus:border-zinc-600 transition-colors"
+              aria-label="Color Token Theme"
+              className="w-full bg-[#18181b] border border-zinc-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-200 focus:outline-none focus:border-zinc-600 transition-colors min-h-[38px]"
             />
           </div>
 
           {/* Border Radius & Accent Swatches */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs font-medium text-zinc-300 block mb-1">
+              <label
+                htmlFor="theme-token-radius"
+                className="text-xs font-medium text-zinc-300 block mb-1"
+              >
                 Border Radius
               </label>
               <input
+                id="theme-token-radius"
+                name="theme-token-radius"
                 type="text"
                 value={radiusValue}
                 onChange={(e) => setRadiusValue(e.target.value)}
-                className="w-full bg-[#18181b] border border-zinc-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-200 focus:outline-none focus:border-zinc-600"
+                aria-label="Border Radius"
+                className="w-full bg-[#18181b] border border-zinc-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-200 focus:outline-none focus:border-zinc-600 min-h-[38px]"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-300 block mb-1">
+              <span className="text-xs font-medium text-zinc-300 block mb-1">
                 Accent Glow
-              </label>
-              <div className="flex items-center gap-1.5 h-9 bg-[#18181b] border border-zinc-800 rounded-lg px-2">
+              </span>
+              <div
+                role="radiogroup"
+                aria-label="Accent glow color presets"
+                className="flex items-center justify-around h-[38px] bg-[#18181b] border border-zinc-800 rounded-lg px-1"
+              >
                 {[
-                  { id: "violet", bg: "bg-violet-500" },
-                  { id: "emerald", bg: "bg-emerald-500" },
-                  { id: "cyan", bg: "bg-cyan-500" },
-                  { id: "amber", bg: "bg-amber-500" },
+                  { id: "violet", bg: "bg-violet-500", name: "Violet" },
+                  { id: "emerald", bg: "bg-emerald-500", name: "Emerald" },
+                  { id: "cyan", bg: "bg-cyan-500", name: "Cyan" },
+                  { id: "amber", bg: "bg-amber-500", name: "Amber" },
                 ].map((col) => (
                   <button
                     key={col.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={accentColor === col.id}
+                    aria-label={`Select ${col.name} accent glow`}
                     onClick={() => setAccentColor(col.id as any)}
-                    className={`w-4 h-4 rounded-full ${col.bg} transition-transform cursor-pointer ${
-                      accentColor === col.id
-                        ? "scale-125 ring-2 ring-white shadow-xs"
-                        : "opacity-60 hover:opacity-100"
-                    }`}
-                    title={`Select ${col.id} accent`}
-                  />
+                    className="min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer p-1"
+                    title={`Select ${col.name} accent`}
+                  >
+                    <span
+                      className={`w-4 h-4 rounded-full ${col.bg} transition-transform ${
+                        accentColor === col.id
+                          ? "scale-125 ring-2 ring-white shadow-xs"
+                          : "opacity-60 hover:opacity-100"
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
             </div>
@@ -432,6 +501,8 @@ export const HeroShowcaseGrid: React.FC = () => {
         {/* Buttons */}
         <div className="pt-2 space-y-2">
           <button
+            type="button"
+            aria-label="Export Theme Tokens configuration"
             onClick={handleExportTokens}
             className="w-full py-2.5 rounded-xl bg-white text-black text-xs sm:text-sm font-semibold hover:bg-zinc-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm min-h-[40px] active:scale-98"
           >
@@ -450,12 +521,14 @@ export const HeroShowcaseGrid: React.FC = () => {
             )}
           </button>
           <button
+            type="button"
+            aria-label="Reset design tokens to defaults"
             onClick={() => {
               setThemePreset("Vibrant Obsidian");
               setRadiusValue("12px");
               setAccentColor("violet");
             }}
-            className="w-full py-1 text-center text-xs text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+            className="w-full py-2 min-h-[36px] flex items-center justify-center text-center text-xs text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
           >
             Reset Defaults
           </button>
@@ -471,6 +544,9 @@ export const HeroShowcaseGrid: React.FC = () => {
           <div className="w-36 h-36 bg-white rounded-2xl p-2.5 flex items-center justify-center shadow-2xl transition-transform duration-300 group-hover:scale-105">
             <svg
               viewBox="0 0 100 100"
+              width="144"
+              height="144"
+              aria-label="QR code to test mobile preview"
               className="w-full h-full text-black fill-current"
             >
               <rect x="0" y="0" width="30" height="30" rx="4" />
@@ -529,8 +605,14 @@ export const HeroShowcaseGrid: React.FC = () => {
 
           {/* Interactive CLI Badge */}
           <button
+            type="button"
             onClick={handleCopyCli}
-            className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#18181b] border border-zinc-800 hover:border-zinc-700 text-xs sm:text-[13px] text-zinc-200 font-mono transition-colors cursor-pointer group"
+            aria-label={
+              cliCopied
+                ? "CLI command copied to clipboard"
+                : "Copy CLI command to add glow-card"
+            }
+            className="w-full flex items-center justify-between px-3.5 py-2.5 min-h-[40px] rounded-xl bg-[#18181b] border border-zinc-800 hover:border-zinc-700 text-xs sm:text-[13px] text-zinc-200 font-mono transition-colors cursor-pointer group"
             title="Click to copy CLI command"
           >
             <div className="flex items-center gap-1.5 truncate">
@@ -540,7 +622,7 @@ export const HeroShowcaseGrid: React.FC = () => {
             {cliCopied ? (
               <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-1.5 animate-in zoom-in" />
             ) : (
-              <Copy className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white shrink-0 ml-1.5" />
+              <Copy className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white shrink-0 ml-1.5" />
             )}
           </button>
         </div>

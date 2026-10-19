@@ -337,20 +337,25 @@ export const Footer: React.FC<FooterProps> = ({
                 onSubmit={handleSubscribe}
                 className="flex flex-col sm:flex-row gap-2 pt-1"
               >
+                <label htmlFor="footer-newsletter-email" className="sr-only">
+                  Developer email for community updates
+                </label>
                 <input
+                  id="footer-newsletter-email"
+                  name="footer-newsletter-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your developer email..."
                   required
                   aria-label="Developer email for community updates"
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-[#18181f] border border-zinc-800 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors"
+                  className="flex-1 px-4 py-2.5 min-h-[44px] rounded-xl bg-[#18181f] border border-zinc-800 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-600 transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={subscribed}
                   aria-label="Subscribe to updates"
-                  className="px-5 py-2.5 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-90 font-semibold text-xs sm:text-sm transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
+                  className="px-5 py-2.5 min-h-[44px] rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-90 font-semibold text-xs sm:text-sm transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
                 >
                   {subscribed ? (
                     <>
@@ -398,7 +403,7 @@ export const Footer: React.FC<FooterProps> = ({
                   <span className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
                     {catalogCount}
                   </span>
-                  <span className="text-xs text-zinc-400 font-mono">
+                  <span className="text-xs text-zinc-300 font-mono">
                     primitives
                   </span>
                 </div>
@@ -414,7 +419,7 @@ export const Footer: React.FC<FooterProps> = ({
                   <Check className="w-3.5 h-3.5" />
                   <span>Free &amp; Open Source</span>
                 </div>
-                <span className="text-zinc-500 font-mono text-[10px]">
+                <span className="text-zinc-400 font-mono text-[10px]">
                   MIT License
                 </span>
               </div>
@@ -448,7 +453,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <div className="flex items-center gap-1.5 text-zinc-300 font-mono text-[11px]">
                   <span>Session: {formatSessionTime(sessionSeconds)}</span>
                 </div>
-                <span className="text-zinc-500 font-mono text-[11px]">
+                <span className="text-zinc-400 font-mono text-[11px]">
                   Local storage
                 </span>
               </div>
@@ -483,13 +488,13 @@ export const Footer: React.FC<FooterProps> = ({
 
               <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs">
                 <a
-                  href="https://github.com/DEVAL-020"
+                  href="https://github.com/DEVAL-020/depth-ui"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors text-[11px]"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
-                  <span className="font-mono">github.com/DEVAL-020</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="font-mono">github.com/DEVAL-020/depth-ui</span>
                 </a>
               </div>
             </div>
@@ -534,7 +539,8 @@ export const Footer: React.FC<FooterProps> = ({
                         type="button"
                         onClick={handleResetRating}
                         title="Clear and reset your rating"
-                        className="text-[11px] text-zinc-400 hover:text-zinc-200 underline underline-offset-2 transition-colors cursor-pointer"
+                        aria-label="Reset your rating"
+                        className="text-[11px] text-zinc-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer min-h-[32px] py-1 px-1.5"
                       >
                         Reset
                       </button>
@@ -550,7 +556,7 @@ export const Footer: React.FC<FooterProps> = ({
                 </div>
 
                 <div
-                  className="flex items-center gap-1 py-1"
+                  className="flex items-center gap-0.5 py-1"
                   onMouseLeave={() => setHoverRating(0)}
                 >
                   {[1, 2, 3, 4, 5].map((star) => {
@@ -567,13 +573,13 @@ export const Footer: React.FC<FooterProps> = ({
                         onClick={(e) => handleRate(star, e)}
                         onMouseEnter={() => setHoverRating(star)}
                         aria-label={`Rate ${star} out of 5 stars`}
-                        className="p-1 rounded-md hover:bg-zinc-800/80 transition-all duration-150 cursor-pointer active:scale-90 group/star outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                        className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-zinc-800/80 transition-all duration-150 cursor-pointer active:scale-90 group/star outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
                       >
                         <Star
                           className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-150 ${
                             isFilled
                               ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)] scale-105"
-                              : "text-zinc-600 hover:text-zinc-400"
+                              : "text-zinc-500 hover:text-zinc-300"
                           }`}
                         />
                       </button>
@@ -833,13 +839,13 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* Social Icons & Back to Top */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <a
               href="https://github.com/DEVAL-020"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Deval Patel on GitHub (DEVAL-020)"
-              className="w-8 h-8 rounded-lg bg-[#18181f] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-[#18181f] border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path
@@ -854,7 +860,7 @@ export const Footer: React.FC<FooterProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Deval Patel on X"
-              className="w-8 h-8 rounded-lg bg-[#18181f] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-[#18181f] border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -865,7 +871,7 @@ export const Footer: React.FC<FooterProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Deval Patel on LinkedIn"
-              className="w-8 h-8 rounded-lg bg-[#18181f] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-[#18181f] border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
@@ -876,9 +882,10 @@ export const Footer: React.FC<FooterProps> = ({
 
             {/* Back to top button */}
             <button
+              type="button"
               onClick={scrollToTop}
               aria-label="Scroll back to top of page"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#18181f] border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer text-xs font-medium"
+              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl bg-[#18181f] border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer text-xs font-medium"
             >
               <span>Back to Top</span>
               <ArrowUp className="w-3.5 h-3.5" />

@@ -205,20 +205,26 @@ export const ComponentDirectoryGrid: React.FC<ComponentDirectoryGridProps> = ({
         {/* Quick Search and Grouping Controls */}
         <div className="flex items-center gap-2">
           <div className="relative w-full sm:w-72">
+            <label htmlFor="directory-search-input" className="sr-only">
+              Search components catalog
+            </label>
             <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
+              id="directory-search-input"
+              name="directory-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search ${totalCount} pieces...`}
-              aria-label="Search components"
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#18181b] border border-zinc-800 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors"
+              aria-label="Search components catalog"
+              className="w-full pl-10 pr-4 py-2.5 min-h-[40px] rounded-xl bg-[#18181b] border border-zinc-800 text-sm sm:text-base text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-600 transition-colors"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-zinc-400 hover:text-white cursor-pointer"
+                aria-label="Clear search query"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-zinc-300 hover:text-white cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
               >
                 Clear
               </button>
@@ -245,12 +251,14 @@ export const ComponentDirectoryGrid: React.FC<ComponentDirectoryGridProps> = ({
                   return (
                     <button
                       key={cat.id}
+                      type="button"
                       onClick={() => scrollToGroup(cat.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer shrink-0 text-xs sm:text-sm font-medium"
+                      aria-label={`Jump to ${cat.label} components`}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer shrink-0 text-xs sm:text-sm font-medium"
                     >
                       <Icon className="w-3.5 h-3.5 text-zinc-400" />
                       <span>{cat.label}</span>
-                      <span className="text-xs text-zinc-400 font-mono">
+                      <span className="text-xs text-zinc-300 font-mono">
                         ({count})
                       </span>
                     </button>
@@ -258,26 +266,29 @@ export const ComponentDirectoryGrid: React.FC<ComponentDirectoryGridProps> = ({
                 })}
               </div>
 
-              {/* View Layout Toggle */}
-              <div className="flex items-center gap-1 text-xs text-zinc-400 self-end md:self-auto shrink-0">
-                <span>Layout:</span>
+              {/* View Layout Toggle with accessible touch target dimensions */}
+              <div className="flex items-center gap-1.5 text-xs text-zinc-300 self-end md:self-auto shrink-0 bg-[#18181b] p-1 rounded-xl border border-zinc-800">
+                <span className="px-1 text-zinc-400">Layout:</span>
                 <button
+                  type="button"
                   onClick={() => setGridGrouping("grouped")}
-                  className={`px-2 py-0.5 rounded cursor-pointer ${
+                  aria-pressed={gridGrouping === "grouped"}
+                  className={`px-3 py-1.5 min-h-[36px] rounded-lg cursor-pointer text-xs font-semibold transition-all ${
                     gridGrouping === "grouped"
-                      ? "bg-zinc-800 text-white font-medium"
-                      : "text-zinc-500 hover:text-zinc-300"
+                      ? "bg-zinc-800 text-white shadow-xs"
+                      : "text-zinc-300 hover:text-white"
                   }`}
                 >
                   Grouped
                 </button>
-                <span>/</span>
                 <button
+                  type="button"
                   onClick={() => setGridGrouping("flat")}
-                  className={`px-2 py-0.5 rounded cursor-pointer ${
+                  aria-pressed={gridGrouping === "flat"}
+                  className={`px-3 py-1.5 min-h-[36px] rounded-lg cursor-pointer text-xs font-semibold transition-all ${
                     gridGrouping === "flat"
-                      ? "bg-zinc-800 text-white font-medium"
-                      : "text-zinc-500 hover:text-zinc-300"
+                      ? "bg-zinc-800 text-white shadow-xs"
+                      : "text-zinc-300 hover:text-white"
                   }`}
                 >
                   Flat Grid

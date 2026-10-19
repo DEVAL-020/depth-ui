@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Menu, X, ArrowRight } from "lucide-react";
+import { Search, Menu, X, ArrowRight, Star } from "lucide-react";
 
 export interface NavbarProps {
   currentTab: "components" | "showcase" | "docs";
@@ -21,6 +21,42 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [repoStars, setRepoStars] = useState<number>(() => {
+    try {
+      const cached = sessionStorage.getItem("depth_ui_repo_stars");
+      if (cached) {
+        const parsed = parseInt(cached, 10);
+        if (!isNaN(parsed) && parsed >= 0) return parsed;
+      }
+    } catch {
+      // Storage unavailable
+    }
+    return 3; // Initial verified star count
+  });
+
+  useEffect(() => {
+    fetch("https://api.github.com/repos/DEVAL-020/depth-ui")
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Failed to fetch repository stats");
+      })
+      .then((data) => {
+        if (data && typeof data.stargazers_count === "number") {
+          setRepoStars(data.stargazers_count);
+          try {
+            sessionStorage.setItem(
+              "depth_ui_repo_stars",
+              String(data.stargazers_count),
+            );
+          } catch {
+            // Storage unavailable
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback to initial/cached value
+      });
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,12 +120,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header
-      className={`sticky top-0 z-40 w-full transition-all duration-300 ease-in-out px-4 sm:px-6 lg:px-8 ${
+      className={`sticky top-0 z-40 w-full transition-all duration-300 ease-in-out px-4 sm:px-6 lg:px-8 py-3.5 ${
         isScrolled || mobileMenuOpen
           ? isDark
-            ? "bg-[#09090b]/60 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/25 py-3"
-            : "bg-white/70 backdrop-blur-xl border-b border-zinc-200/80 shadow-lg shadow-zinc-950/5 py-3"
-          : "bg-transparent border-b border-transparent py-4"
+            ? "bg-[#09090b]/80 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/25"
+            : "bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 shadow-lg shadow-zinc-950/5"
+          : "bg-transparent border-b border-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
@@ -140,19 +176,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Search Button for Mobile (< sm) */}
           <button
+            type="button"
             onClick={onOpenSearch}
-            className="sm:hidden p-2 rounded-lg bg-[#18181b] hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition-colors cursor-pointer flex items-center justify-center"
+            className="sm:hidden p-2.5 min-w-[44px] min-h-[44px] rounded-lg bg-[#18181b] hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition-colors cursor-pointer flex items-center justify-center"
             title="Search (⌘K)"
-            aria-label="Search"
+            aria-label="Open search dialog"
           >
-            <Search className="w-4 h-4 text-zinc-400" />
+            <Search className="w-4 h-4 text-zinc-300" />
           </button>
 
           {/* Search Button for Tablet & Desktop (>= sm) */}
           <button
+            type="button"
             onClick={onOpenSearch}
             aria-label="Search components"
-            className="hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-[#18181b] hover:bg-zinc-800 text-sm text-zinc-300 border border-zinc-800 transition-colors cursor-pointer w-48 md:w-60 justify-between"
+            className="hidden sm:flex items-center gap-2.5 px-3.5 py-2 min-h-[40px] rounded-lg bg-[#18181b] hover:bg-zinc-800 text-sm text-zinc-300 border border-zinc-800 transition-colors cursor-pointer w-48 md:w-60 justify-between"
           >
             <span className="flex items-center gap-2 truncate">
               <Search className="w-4 h-4 text-zinc-400 shrink-0" />
@@ -165,28 +203,34 @@ export const Navbar: React.FC<NavbarProps> = ({
             </kbd>
           </button>
 
-          {/* GitHub Star Link */}
+          {/* GitHub Star Link with Live Stars Badge */}
           <a
-            href="https://github.com/DEVAL-020"
+            href="https://github.com/DEVAL-020/depth-ui"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Deval Patel on GitHub"
-            className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-zinc-200 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-colors"
-            title="Star on GitHub"
+            aria-label={`Depth UI on GitHub (${repoStars} stars)`}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 min-h-[40px] rounded-lg text-xs sm:text-sm font-medium text-zinc-200 hover:text-white hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all group"
+            title="Star DEVAL-020/depth-ui on GitHub"
           >
-            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
             </svg>
-            <span className="text-xs sm:text-sm">GitHub</span>
+            <span className="text-xs sm:text-sm font-medium">GitHub</span>
+            <span className="w-px h-3.5 bg-zinc-800 group-hover:bg-zinc-700 transition-colors" />
+            <span className="flex items-center gap-1 font-mono text-[11px] sm:text-xs text-zinc-300 group-hover:text-amber-300 transition-colors">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+              <span>{repoStars}</span>
+            </span>
           </a>
 
           {/* Get Started Button */}
           <button
+            type="button"
             onClick={() => {
               setCurrentTab("docs");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="hidden sm:flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white text-black text-xs sm:text-sm font-semibold hover:bg-zinc-200 transition-colors cursor-pointer shadow-sm"
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-lg bg-white text-black text-xs sm:text-sm font-semibold hover:bg-zinc-200 transition-colors cursor-pointer shadow-sm"
           >
             <span>Get Started</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -194,9 +238,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 transition-colors cursor-pointer"
+            className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 border border-zinc-800 transition-colors cursor-pointer flex items-center justify-center"
             aria-label="Open Navigation Menu"
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? (
               <X className="w-5 h-5" />
@@ -226,8 +272,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               {link.label}
             </button>
           ))}
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col gap-2">
+            <a
+              href="https://github.com/DEVAL-020/depth-ui"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Depth UI GitHub Repository (${repoStars} stars)`}
+              className="w-full py-2.5 px-3.5 rounded-xl bg-[#18181b] border border-zinc-800 text-zinc-200 font-medium hover:bg-zinc-800 transition-colors flex items-center justify-between text-sm"
+            >
+              <div className="flex items-center gap-2">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                </svg>
+                <span>GitHub Repository</span>
+              </div>
+              <span className="flex items-center gap-1 font-mono text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{repoStars}</span>
+              </span>
+            </a>
             <button
+              type="button"
               onClick={() => {
                 setCurrentTab("docs");
                 setMobileMenuOpen(false);
