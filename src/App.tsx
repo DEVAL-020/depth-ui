@@ -15,7 +15,6 @@ import {
 import Navbar from "./components/layout/Navbar";
 import HeroSection from "./components/layout/HeroSection";
 import Footer from "./components/layout/Footer";
-import FloatingSocials from "./components/layout/FloatingSocials";
 import ComponentCardPreview from "./components/common/ComponentCardPreview";
 import ComponentDirectoryGrid from "./components/layout/ComponentDirectoryGrid";
 import { CATEGORIES_CONFIG } from "./data/categoriesConfig";
@@ -939,9 +938,6 @@ export function App() {
         onClose={() => setIsSearchOpen(false)}
         onSelectComponent={handleSelectComponentFromSearch}
       />
-
-      {/* Floating Creator Socials (GitHub & LinkedIn) */}
-      <FloatingSocials />
     </div>
   );
 }
