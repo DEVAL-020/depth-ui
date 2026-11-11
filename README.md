@@ -14,7 +14,6 @@ Build stunning web interfaces faster with 100+ accessible, reusable React and Ta
 
 ---
 
-
 ## 👤 Author
 
 **Deval Patel**
@@ -25,6 +24,3 @@ Build stunning web interfaces faster with 100+ accessible, reusable React and Ta
 ## 📄 License
 
 MIT License. Free for personal and commercial use.
-
-
-
